@@ -1,0 +1,195 @@
+using System;
+using System.Diagnostics;
+using System.Threading; //для работы с потоками
+
+
+namespace ProgaMari
+{
+    class Program1132
+    {
+        public static int n, M;
+        public static double Kl, G1, G2, Pos1, Pos2, T1, T2;
+        public static int D, I, F, G;
+        public static double V_D, V_I, T_F, T_G;//ves
+        public static double Ed_D = 0.1, Ed_I = 0.2, Ed_F = 0.3, Ed_G = 0.4;
+        const int Gruzovik_1 = 10000;
+        const int Gruzovik_2 = 6000;
+
+        static void Main()
+        {
+
+
+
+            do
+            {                // предлагается пользователю осуществить ввод значения переменной
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("Напишите сумму продукции, более 100 единиц - ");
+                string Edinic2 = Console.ReadLine();
+
+                if (decimal.TryParse(Edinic2, out decimal number))// проверка на ввод числа,а не букв
+                {
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine($"Введено число {number}");
+                    M = Convert.ToInt32(Edinic2);
+                    //Console.ForegroundColor = ConsoleColor.White;
+                }
+
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("\n      Вам же сказали: ввести ЧИСЛО!");
+
+                }
+
+
+                // Console.ForegroundColor = ConsoleColor.Red;
+
+            }
+            while (M <= 100);  // если значение переменной выходит из указанного предела, то ввод еще раз
+
+
+
+
+            // предлагается пользователю осуществить ввод значения переменной
+
+            do
+            {
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("\nНеобходим. изготавлевоемой продукции, более 50 едениц в час.");
+                string Edinic1 = Console.ReadLine();
+
+
+                if (decimal.TryParse(Edinic1, out decimal number))// проверка на ввод числа,а не букв
+                {
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine($"Введено число {number}");
+                    n = Convert.ToInt32(Edinic1);
+                }
+
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("      Вам же сказали: ввести ЧИСЛО!");
+
+                }
+            }
+
+            while (n <= 50);           // если значение переменной выходит из указанного предела предлагают пользователю ввести еще раз значения
+
+
+            D = n;
+            I = Convert.ToInt32(1.1 * n);
+            F = Convert.ToInt32(1.2 * n);
+            G = Convert.ToInt32(1.3 * n);
+            V_D = D * Ed_D;//ves
+            V_I = I * Ed_I;
+            T_F = F * Ed_F;
+            T_G = G * Ed_G;
+
+            int Zap_sklada = M * (D + I + F + G);
+
+            Kl = Convert.ToInt32(Zap_sklada * 95 / 100);// на 95 склад заполнен
+            G1 = Convert.ToInt32(Kl * 60 / 100 / Gruzovik_1);//сколько грузовиков потребуется груз.1
+            G2 = Convert.ToInt32(Kl * 40 / 100 / Gruzovik_2);// сколькор груз потребуется груз.2
+            Pos1 = Convert.ToInt32(Kl * 60 / 100); //
+            Pos2 = Convert.ToInt32(Kl * 40 / 100);
+            T1 = Convert.ToInt32((Kl * 60 / 100) - (D + I));//распределение 1 грузовика
+            T2 = Convert.ToInt32((Kl * 40 / 100) - (F + G));// распределение 2 грузовика
+
+
+
+
+            // создаем первый поток  - выпуск D
+            Thread factory_a = new Thread(Zavod_1);//присваевает значение кот. функция обработала
+            factory_a.Priority = ThreadPriority.Highest;//приоритет высокий
+
+            factory_a.Start();
+            Thread.Sleep(TimeSpan.FromSeconds(1));
+            for (int i = 1; i <= D; i++)
+            {
+                Console.Write(string.Format("Zav_A{0} ", i));
+            }
+
+
+            // создаем 2p. - выпуск I
+            Thread factory_b = new Thread(Zavod_2);
+            factory_b.Priority = ThreadPriority.AboveNormal; //
+            factory_b.Start();
+            // Остановка потока на 1 секунду
+            Thread.Sleep(TimeSpan.FromSeconds(1));
+            for (int i = 1; i <= I; i++)
+            {
+                Console.Write(string.Format("Zav_B{0} ", i));
+            }
+
+            // создаем четвёртый поток, функц. - выпуск G
+            Thread factory_d = new Thread(Zavod_4);
+            factory_d.Priority = ThreadPriority.Normal;//
+            // запускаем четвёртый поток
+            factory_d.Start();
+            // Остановка потока на 1 секунду
+            Thread.Sleep(TimeSpan.FromSeconds(1));
+            for (int i = 1; i <= G; i++)
+            {
+                Console.Write(string.Format("Zav_D{0} ", i));
+            }
+
+ 
+
+            // созд. 3p.
+            Thread factory_c = new Thread(Zavod_3);
+            factory_c.Priority = ThreadPriority.Normal;
+            // запускаем третий поток
+            factory_c.Start();
+            // Остановка потока на 1 секунду
+            Thread.Sleep(TimeSpan.FromSeconds(1));
+            for (int i = 1; i <= F; i++)
+            {
+                Console.Write(string.Format("Zav_C{0} ", i));
+            }
+
+
+            Console.ForegroundColor = ConsoleColor.Blue;// цыет вывода расчетf
+            // далее выводятся расчётные данные по указанному условию задания про заводы
+            Console.Write(string.Format("\n\nОбщая вместимость склада {0} едениц.", Zap_sklada));
+            Console.Write(string.Format("\n\n       При заполнении склада на 95% - {0} едениц, производится вывоз со склада двумя грузовиками.", Kl));
+            Console.Write(string.Format("\n\n       Первый грузовик (вместимостью {0} едениц) выполнит {1} рейс(а)(ов). " + "\n\nПеревезёт {2} едениц, в том числе: продукт a-{3} ед., продукт b-{4} ед., количество {5} ед.", Gruzovik_1, G1, Pos1, D, I, T1));
+            Console.Write(string.Format("\n\n       Второй грузовик (вместимостью 6000 едениц) выполнит {0} рейс(а)(ов). " +
+             "\n\n          Перевезёт {1} едениц, в том числе: продукт c-{2} ед., продукт d-{3} ед., количество {4} ед.", G2, Pos2, F, G, T2));
+
+
+            // функция потока D
+            // public static void Zavod_1()// описание функци,что делает
+            static void Zavod_1()// описание функци,что делает
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine(string.Format("\n\nЗавод A: Объём выпуска продукта a составляет {0} ед./час, а общий вес партии продукта составляет {1} кг.", D, V_D));
+            }
+            // функция потока I
+            // public static void Zavod_2()
+            static void Zavod_2()
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine(string.Format("\n\nЗавод B: Объём выпуска продукта b составляет {0} ед./час, а общий вес партии продукта составляет {1} кг.", I, V_I));
+            }
+            // функция потока G
+            static void Zavod_4()
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine(string.Format("\n\nЗавод D: Объём выпуска продукта d составляет {0} ед./час, а общий вес партии продукта составляет {1} кг.", G, T_G));
+                Console.ReadLine();
+            }
+            // функция потока F
+            //public static void Zavod_3()
+            static void Zavod_3()
+            {
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine(string.Format("\n\nЗавод C: Объём выпуска продукта c составляет {0} ед./час, а общий вес партии продукта составляет {1} кг.", F, T_F));
+            }
+
+
+        }
+    }
+}
+
+
